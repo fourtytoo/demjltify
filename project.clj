@@ -2,7 +2,7 @@
   :description "Milter library"
   :url "http://example.com/FIXME"
   :license {:name "LGPL"
-            :url "https://www.gnu.org/copyleft/lesser.html"}
+            :url "http://www.gnu.org/copyleft/lesser.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [log4j/log4j "1.2.17"]
