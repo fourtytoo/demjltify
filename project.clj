@@ -1,6 +1,6 @@
-(defproject demjltify "0.1.0-SNAPSHOT"
+(defproject demijtify "0.1.0-SNAPSHOT"
   :description "Milter library"
-  :url "https://github.com/fourtytoo/demjltify.git"
+  :url "https://github.com/fourtytoo/demyjtify"
   :license {:name "LGPL"
             :url "http://www.gnu.org/copyleft/lesser.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]

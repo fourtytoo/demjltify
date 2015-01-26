@@ -1,10 +1,10 @@
-# demjltify
+# demyjtify
 
 A Clojure library designed to implement milters that communicate with Sendmail.
 
 ## Usage
 
-See test/demjltify/sample.clj
+See test/demyjtify/sample.clj
 
 ## License
 

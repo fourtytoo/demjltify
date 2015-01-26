@@ -1,6 +1,6 @@
-(ns demjltify.sample
+(ns demyjtify.sample
   (:require [clojure.test :refer :all]
-            [demjltify.core :refer :all]))
+            [demyjtify.core :refer :all]))
 
 (defonce message-counter (atom 0))
 (defonce byte-counter (atom 0))

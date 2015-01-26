@@ -1,4 +1,4 @@
-(ns demjltify.core
+(ns demyjtify.core
   (:require [clojure.tools.logging :as log]
             [clojure.tools.trace :as trace]
             [clj-logging-config.log4j :as logconf]
@@ -761,9 +761,9 @@
   (flush))
 
 (defn enable-tracing []
-  (trace/trace-ns 'demjltify.core)
+  (trace/trace-ns 'demyjtify.core)
   ;; no need to also trace the loggin function
-  (trace/untrace-var* 'demjltify.core/log-formatter))
+  (trace/untrace-var* 'demyjtify.core/log-formatter))
 
 (defn setup-logging []
   (logconf/set-logger! :name "console"
