@@ -128,11 +128,6 @@
 (defmacro error [type & args]
   `(throw (ex-info "Protocol error" (hash-map :type '~type ~@args))))
 
-#_(defmacro do1 [form & rest]
-    `(let [value# ~form]
-       ~@rest
-       value#))
-
 (defn chunking [sequence size]
   (letfn [(make [s]
             (lazy-seq
@@ -583,8 +578,6 @@
   can't."
   [sequence stream]
   (.write stream (byte-array sequence)))
-
-
 
 (defn send-packet
   "Send a protocol packet to the MTA through STREAM.  DATA is a
