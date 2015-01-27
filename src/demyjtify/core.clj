@@ -85,21 +85,19 @@
   ;; use hash-map instead
   #_(reduce-plist (fn [result k v] (assoc result k v)) {} plist))
 
-(defmacro type-case
-  "Like CL type-case but with a Clojure syntax."
-  [obj & cases]
-  (let [c (gensym)]
-    `(let [~c (class ~obj)]
-       (cond ~@(mapcat-plist (fn [cl body] `((isa? ~c ~cl) ~body))
-                             cases)))))
+(defn readable? [obj]
+  (instance? Readable obj))
+
+(defn file? [obj]
+  (instance? java.io.File obj))
 
 (defn reader [obj]
-  (if (isa? (class obj) java.net.Socket)
+  (if (instance? java.net.Socket obj)
     (socket-reader obj)
     obj))
 
 (defn writer [obj]
-  (if (isa? (class obj) java.net.Socket)
+  (if (instance? java.net.Socket obj)
     (socket-writer obj)
     obj))
 
@@ -657,13 +655,13 @@
             (send-readable [readable]
               (send-sequence (lazy-slurp readable)))
             (send-file [file]
-              (with-open [input (clojure.java.io/reader file)]
+              (with-open [input (io/reader file)]
                 (send-readable input)))]
-      (type-case body
-        String (send-sequence (seq body))
-        sequence (send-sequence body)
-        Readable (send-readable body)
-        java.io.File (send-file body)))))
+      (cond
+        (string? body) (send-sequence (seq body))
+        (seq? body) (send-sequence body)
+        (readable? body) (send-readable body)
+        (file? body) (send-file body)))))
 
 (defaction :continue
   (send-packet socket \c))
