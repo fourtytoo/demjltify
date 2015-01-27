@@ -1,6 +1,7 @@
 (ns demyjtify.core
   (:require [clojure.tools.logging :as log]
             [clojure.tools.trace :as trace]
+            [clojure.java.io :as io]
             [clj-logging-config.log4j :as logconf]
             [clj-time.core :as time]
             [clj-time.coerce :as tc]
@@ -51,11 +52,11 @@
 
 
 (defn socket-reader [socket]
-  #_(clojure.java.io/reader socket)
+  #_(io/reader socket)
   (.getInputStream socket))
 
 (defn socket-writer [socket]
-  #_(clojure.java.io/writer socket)
+  #_(io/writer socket)
   (.getOutputStream socket))
 
 (defn map-plist [f plist]
