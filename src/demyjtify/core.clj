@@ -611,35 +611,33 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro assert-action [action]
-  `(assert (get-in ~'context [:actions ~action])))
-
-(defmacro assert-event [event]
-  `(assert (get-in ~'context [:events ~event])))
-
 (defmacro defaction [type & body]
   `(defmethod send-action-imp ~type
      [~'action ~'context]
-     (let [~'socket (writer (~'context :socket))]
+     (let [~'socket (writer (~'context :socket))
+           ~'assert-action (fn []
+                             ;; Make sure the action we are about to perform is allowed and
+                             ;; expected by the MTA.  Some actions need to be agreed beforehand
+                             ;; during the initial handshake.  See the :OPTIONS event.
+                             (assert (get-in ~'context [:actions (~'action ~type)])))
+           ]
        ~@body)))
 
-(defmacro defaction-a [type & body]
-  `(defaction ~type
-     (assert-action ~type)
-     ~@body))
-
-(defaction-a :add-recipient
+(defaction :add-recipient
+  (assert-action)
   (if (action :parameters)
     (send-packet socket \2 (action :address) 0 (action :parameters) 0)
     (send-packet socket \+ (action :address) 0)))
 
-(defaction-a :delete-recipient
+(defaction :delete-recipient
+  (assert-action)
   (send-packet socket \- (action :address) 0))
 
 (defaction :accept
   (send-packet socket \a))
 
-(defaction-a :replace-body
+(defaction :replace-body
+  (assert-action)
   (let [socket socket
         body (action :body)]
     (letfn [(send-sequence [seq]
@@ -662,28 +660,34 @@
 (defaction :discard
   (send-packet socket \d))
 
-(defaction-a :change-sender
+(defaction :change-sender
+  (assert-action)
   (if (action :parameters)
     (send-packet socket \e (action :address) 0 (action :parameters) 0)
     (send-packet socket \e (action :address) 0)))
 
-(defaction-a :add-header
+(defaction :add-header
+  (assert-action)
   (if (action :position)
     (send-packet socket \i (action :position) 0 (action :name) 0 (action :value) 0)
     (send-packet socket \h (action :name) 0 (action :value) 0)))
 
-(defaction-a :change-header
+(defaction :change-header
+  (assert-action)
   (send-packet socket \m (encode-int32 (action :index))
                (action :name) 0 (action :value) 0))
 
-(defaction-a :quarantine
+(defaction :quarantine
+  (assert-action)
   (send-packet socket \q (action :reason) 0))
 
 (defaction :reject
   (send-packet socket \r))
 
 (defaction :skip
-  (assert-event :can-skip)
+  ;; Not sure to have really understood the meaning of the events
+  ;; flag :CAN-SKIP -wcp27/1/15.
+  (assert (get-in context [:events :can-skip]))
   (send-packet socket \s))
 
 (defaction :temporary-failure
