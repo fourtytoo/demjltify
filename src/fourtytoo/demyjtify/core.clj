@@ -75,7 +75,7 @@
                        :append true
                        :out log-formatter))
 
-(defn debug-program [& args]
+(defn debug-milter [& args]
   (let [port (if (empty? args)
                4242
                (first args))]
