@@ -1,6 +1,8 @@
-(ns demyjtify.sample
+(ns fourtytoo.demyjtify.sample
   (:require [clojure.test :refer :all]
-            [demyjtify.core :refer :all]))
+            [fourtytoo.demyjtify.core :refer :all]
+            [fourtytoo.demyjtify.actions :refer (send-action)]
+            [fourtytoo.demyjtify.events :refer (default-event-handler)]))
 
 (defonce message-counter (atom 0))
 (defonce byte-counter (atom 0))
@@ -44,6 +46,5 @@
                     (fn [ctx]
                       (println "got MTA connection" ctx)
                       (-> ctx
-                          (assoc :events #{:mail :body})
                           (assoc :byte-count 0)
                           (assoc :handlers handlers)))))))
