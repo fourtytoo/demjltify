@@ -1,8 +1,13 @@
 (ns fourtytoo.demyjtify.sample
   (:require [clojure.test :refer :all]
-            [fourtytoo.demyjtify.core :refer :all]
-            [fourtytoo.demyjtify.actions :refer (send-action)]
-            [fourtytoo.demyjtify.events :refer (default-event-handler)]))
+            [clj-time.core :as time]
+            [clj-time.coerce :as tc]
+            [clojure.tools.trace :as trace]
+            [clojure.tools.logging :as log]
+            [clj-logging-config.log4j :as logconf])
+  (:use [fourtytoo.demyjtify.core]
+        [fourtytoo.demyjtify.actions :refer (send-action)]
+        [fourtytoo.demyjtify.events :refer (default-event-handler)]))
 
 (defonce message-counter (atom 0))
 (defonce byte-counter (atom 0))

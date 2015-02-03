@@ -1,11 +1,5 @@
 (ns fourtytoo.demyjtify.core
-  (:require [clojure.tools.logging :as log]
-            [clojure.tools.trace :as trace]
-            [clojure.java.io :as io]
-            [clj-logging-config.log4j :as logconf]
-            [clj-time.core :as time]
-            [clj-time.coerce :as tc]
-            [clojure.string :as str])
+  (:require [clojure.tools.logging :as log])
   (:use [fourtytoo.bnb4clj]
         [fourtytoo.demyjtify.util]
         [fourtytoo.demyjtify.events]
