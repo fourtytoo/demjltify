@@ -12,26 +12,59 @@
   (println "the messages seen so far total" @byte-counter "bytes")
   (println "for an average of" (/ @byte-counter @message-counter) "bytes per message"))
 
-(def handlers
-  {:body (fn [e c]
-           (println "BODY" e)             ; -wcp25/1/15.
-           (send-action {:action :continue} c)
-           (update-in c [:byte-count]
-                      #(+ % (count (e :data)))))
-   :mail (fn [e c]
-           (println "MAIL" e)             ; -wcp25/1/15.
-           (send-action {:action :continue} c)
-           (assoc c :byte-count 0))
-   :abort (fn [e c]
-            (println "ABORT" e)             ; -wcp25/1/15.
-            (->> (assoc c :byte-count 0)
-                 (default-event-handler e)))
-   :end-of-message (fn [e c]
-                     (swap! byte-counter
-                            #(+ % (c :byte-count)))
-                     (swap! message-counter inc)
-                     (print-totals c)
-                     (default-event-handler e c))})
+(define-event-handlers handlers
+  (:body
+   (print "+")
+   (send-action {:action :continue} context)
+   (update-in context [:byte-count]
+              #(+ % (count (event :data)))))
+  (:mail
+   (print "MAIL ")
+   (send-action {:action :continue} context)
+   (assoc context :byte-count 0))
+  (:abort
+   (println " *ABORT*")
+   (->> (assoc context :byte-count 0)
+        (default-event-handler event)))
+  (:end-of-message
+   (println " EOM")
+   (swap! byte-counter
+          #(+ % (context :byte-count)))
+   (swap! message-counter inc)
+   (print-totals context)
+   (default-event-handler event context)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn log-formatter [log]
+  (println (str (tc/to-date (log :timeStamp)))
+           (str "[" (log :threadName) "]")
+           (log :message))
+  (flush))
+
+(def this-name-space *ns*)
+
+(defn enable-tracing [namespace]
+  (trace/trace-ns namespace)
+  ;; no need to also trace the loggin function
+  (trace/untrace-var* 'log-formatter))
+
+(defn setup-logging []
+  (logconf/set-logger! :name "console"
+                       :level :debug
+                       :append true
+                       :out log-formatter))
+
+(defn debug-milter [& args]
+  (let [port (if (empty? args)
+               4242
+               (first args))]
+    (enable-tracing this-name-space)
+    (setup-logging)
+    (log/info "Strating server on port" port)
+    ;; don't hang waiting the milter to return so that we still have the REPL
+    (future (start-milter port identity))))
+
 
 (defn run-sample [& args]
   (let [port (if (empty? args)

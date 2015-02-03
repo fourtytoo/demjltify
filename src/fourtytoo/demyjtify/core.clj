@@ -11,6 +11,14 @@
         [fourtytoo.demyjtify.events]
         [fourtytoo.demyjtify.actions]))
 
+(defmacro define-event-handlers [name & handlers]
+  `(def ~name
+     (hash-map
+      ~@(mapcat (fn [[name & forms]]
+                  `(~name (fn [~'event ~'context]
+                            ~@forms)))
+                handlers))))
+
 (defn server-loop
   "Run the milter protocol loop using CONTEXT as context.  It returns
   on a MILTER-CONDITION or if any event handler returns NIL instead
@@ -53,34 +61,3 @@
        (dprint "Received connection from MTA" cs)
        (future
          (server-loop (on-connect {:socket cs})))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn log-formatter [log]
-  (println (str (tc/to-date (log :timeStamp)))
-           (str "[" (log :threadName) "]")
-           (log :message))
-  (flush))
-
-(def this-name-space *ns*)
-
-(defn enable-tracing [namespace]
-  (trace/trace-ns namespace)
-  ;; no need to also trace the loggin function
-  (trace/untrace-var* 'log-formatter))
-
-(defn setup-logging []
-  (logconf/set-logger! :name "console"
-                       :level :debug
-                       :append true
-                       :out log-formatter))
-
-(defn debug-milter [& args]
-  (let [port (if (empty? args)
-               4242
-               (first args))]
-    (enable-tracing)
-    (setup-logging)
-    (log/info "Strating server on port" port)
-    ;; don't hang waiting the milter to return so that we still have the REPL
-    (future (start-milter port identity))))
