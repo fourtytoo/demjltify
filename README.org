@@ -165,6 +165,32 @@ milter options and stuff your milter might need.  Example:
                           (assoc :handlers my-handlers))))))
 #+END_SRC
 
+*** Macros
+
+Sendmail before some events passes some additional data to the milter.
+This data is in form of values associated to a symbolic name (macro)
+such as =mail_host=, =_= (the connection host), =rcpt_mailer=,
+=rcpt_host=, etc.  A map, at the end of the day.
+
+A milter may access these values with the =get-macro= function,
+passing the current context and the macro name as a string.  Example:
+
+#+BEGIN_SRC clojure -n
+  (let [host (get-macro ctx "_")]
+    (println "Got connection from" host))
+#+END_SRC
+
+In an =:recipient= handler it might be used like this:
+
+#+BEGIN_SRC clojure -n
+  (defn my-recipient-event-handler (event context)
+    (assoc context :my-recipients
+           {:address (extract-mail-address (event :address))
+            :mailer (get-macro context "rcpt_mailer")
+            :host (get-macro context "rcpt_host")}))
+#+END_SRC
+
+
 *** Sendmail configuration
 
 To install a milter in Sendmail, in /etc/mail/sendmail.mc, you have to
