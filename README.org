@@ -114,6 +114,8 @@ cf/README file if you need further details.
 
 ** See also
 
+A simple example of use is in test/.../sample.clj
+
 The following pages could be useful to understand what a milter is
 and what it does:
 
