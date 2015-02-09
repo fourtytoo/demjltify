@@ -61,24 +61,27 @@ Add demyjtify.core to your namespace like this:
 To use this library, all you have to do is:
 
   - specialise the event callbacks for all the events you care about
-  - call ~start-milter~
+  - call =start-milter=
 
 The event callbacks must return a, possibly new, context object and
 optionally perform a milter action among those negotiated with
 Sendmail.
 
 This library is stateless, so the program, if needs to, is responsible
-to save its state in the context object that is returned by the event
-handlers.
+to save its state in the context map that is passed to and returned
+by the event handlers.
+
+Conceptually the lifetime of a context map is the same as the Sendmail
+connection.  The user program has to make sure that it resets whatever
+state, in the context, that is message-specific, at every message
+boundary.  Usually good places are the =end-of-message= and the
+=abort= handlers.
 
 =start-milter= is a procedure that never exits under normal
 circumstances.  It enters a loop serving MTA connections on the
-specified socket.  The default behaviour is to call =on-connection=
-which is a user provided function that should call =server-loop= with
-a context object.  =on-connection= is called in a new thread. You
-don't need to use =start-milter=, if you want to write your own server
-function, go ahead, but for most practical purposes it does what you
-need to connect to Sendmail.
+specified socket.  You don't need to use =start-milter=, if you want
+to write your own server function, go ahead, but for most practical
+purposes it does what you need to connect to Sendmail.
 
 *** Sendmail configuration
 
