@@ -74,14 +74,96 @@ by the event handlers.
 Conceptually the lifetime of a context map is the same as the Sendmail
 connection.  The user program has to make sure that it resets whatever
 state, in the context, that is message-specific, at every message
-boundary.  Usually good places are the =end-of-message= and the
-=abort= handlers.
+boundary.  Usually good places are the =mail= or the
+=end-of-message=/=abort= handlers.
 
 =start-milter= is a procedure that never exits under normal
 circumstances.  It enters a loop serving MTA connections on the
 specified socket.  You don't need to use =start-milter=, if you want
 to write your own server function, go ahead, but for most practical
 purposes it does what you need to connect to Sendmail.
+
+*** The callbacks
+
+The callbacks are a keywords to functions map.  The keyword represents
+the milter event type (coming from Sendmail) and the function accepts
+to arguments; the event and the context.
+
+The events a milter can handle are:
+
+ - =:abort= when Sendmail aborts the current message (others may follow)
+ - =:body= a chunk of the message body (passed the headers)
+ - =:connect= when a client MTA connects to our Sendmail
+ - =:data= marks the beginning of the message body
+ - =:disconnect= Sendmail wishes to disconnect but it will connect
+   again later
+ - =:end-of-headers= to signal the end of the email's headers part
+ - =:end-of-message= at the end of a message body
+ - =:header= for each email header
+ - =:hello= when Sendmail sees a HELO from its client
+ - =:mail= when Sendmail receives a MAIL command from its client
+ - =:quit= when Sendmail asks the milter to lay down and die
+ - =:recipient= for each recipient on the email envelope
+ - =:unkown= invalid SMTP command from Sendmail's client
+
+Internally the milter library handles the following events.  In normal
+circumstances you shouldn't bother with them:
+
+ - =:define-macro= definition of symbolic values that supplement
+   other events
+ - =:options= negotiation of event and actions between Sendmail and
+   the milter
+
+The =define-event-handlers= helps you define the event handlers.  Example:
+
+#+BEGIN_SRC clojure -n
+  (define-event-handlers handlers
+    (:body
+     (print "+")
+     (send-action {:action :continue} context)
+     (update-in context [:byte-count]
+                #(+ % (count (event :data)))))
+    (:mail
+     (print "MAIL ")
+     (send-action {:action :continue} context)
+     (assoc context :byte-count 0))
+    (:abort
+     (println " *ABORT*")
+     (->> (assoc context :byte-count 0)
+          (default-event-handler event)))
+    (:end-of-message
+     (println " EOM")
+     (swap! byte-counter
+            #(+ % (context :byte-count)))
+     (swap! message-counter inc)
+     (print-totals context)
+     (default-event-handler event context)))
+#+END_SRC
+
+The handlers are passed in the context map, associated to the
+=:handlers= keyword.
+
+*** Milter start
+
+To start the milter you simply call =start-milter= and you pass the
+internet port and the connection callback.  The callback will be
+called with a context map which should be augmented with additional
+milter options and stuff your milter might need.  Example:
+
+#+BEGIN_SRC clojure -n
+  (defn my-program [port]
+    ;; [...]
+    (println "Strating server on port" port)
+    (future
+      (start-milter port
+                    (fn [ctx]
+                      (println "got MTA connection" ctx)
+                      (-> ctx
+                          (assoc :byte-count 0)
+                          (assoc :some-other-internal-state [:foo :bar])
+                          ;; defined above with define-event-handlers
+                          (assoc :handlers handlers))))))
+#+END_SRC
 
 *** Sendmail configuration
 
@@ -110,6 +192,9 @@ Then make sure you use the same address in the call of
 The ~F=T~ flag tells Sendmail to treat milter-related errors (ie milter
 not listening or crashing) as temporary.  Read the Sendmail's
 cf/README file if you need further details.
+
+Sendmail does not start the milters.  You have to do that yourself at
+boot time (anyhow, before Sendmail needs them to process a message).
 
 
 ** See also
