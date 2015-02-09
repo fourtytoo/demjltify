@@ -24,11 +24,11 @@ The milter library binds a socket to that port and waits for Sendmail
 connections.
 
 For each connection, the milter library spawns a new thread and calls
-the callback function that was provided in the call to =start-milter=
-passing a context map.  The map, at this point in time, is populated
-by just one value, the socket.  The callback, in turn, must return a
-context map that usually contains further state data and milter
-options such as the event callbacks and various protocol options.
+the callback function that was provided to =start-milter=, passing a
+context map.  The map, at this point in time, is populated by just one
+value, the socket.  The callback, in turn, must return a context map
+that usually contains further state data and milter options such as
+the event callbacks and various protocol options.
 
 Each event callback is itself a function that accepts an event map and
 a context map, and returns a context map (not necessarily the same).
