@@ -80,4 +80,12 @@
 (defn lazy-slurp [readable]
   (take-while pos? (repeatedly #(read-byte readable))))
 
+(defmacro with-open-socket [[socket host port] & body]
+  `(with-open [~socket (java.net.Socket. ~host ~port)]
+     ~@body))
 
+(defmacro with-connections [[socket port] & body]
+  `(with-open [ss# (java.net.ServerSocket. ~port)]
+     (for-ever
+      (let [~socket (.accept ss#)]
+        ~@body))))

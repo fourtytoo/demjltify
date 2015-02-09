@@ -49,9 +49,7 @@
   context object which is passed to the mail server-loop in a separate
   thread."
   [port on-connect]
-  (with-open [ss (java.net.ServerSocket. port)]
-    (for-ever
-     (let [cs (.accept ss)]
-       (dprint "Received connection from MTA" cs)
-       (future
-         (server-loop (on-connect {:socket cs})))))))
+  (with-connections [cs port]
+    (dprint "Received connection from MTA" cs)
+    (future
+      (server-loop (on-connect {:socket cs})))))
