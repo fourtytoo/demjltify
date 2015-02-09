@@ -153,7 +153,7 @@ milter options and stuff your milter might need.  Example:
 #+BEGIN_SRC clojure -n
   (defn my-program [port]
     ;; [...]
-    (println "Strating server on port" port)
+    (println "Starting server on port" port)
     (future
       (start-milter port
                     (fn [ctx]

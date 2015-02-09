@@ -66,7 +66,7 @@
                (first args))]
     (enable-tracing this-name-space)
     (setup-logging)
-    (log/info "Strating server on port" port)
+    (log/info "Starting server on port" port)
     ;; don't hang waiting the milter to return so that we still have the REPL
     (future (start-milter port identity))))
 
