@@ -52,7 +52,7 @@ Add demyjtify.core to your namespace like this:
 
 #+BEGIN_SRC clojure -n
   (ns my-program.core
-    (:require [fourtytoo.demjltify.core :as milter]))
+    (:require [fourtytoo.demyjtify.core :as milter]))
 #+END_SRC
 
 
