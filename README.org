@@ -185,9 +185,10 @@ In an =:recipient= handler it might be used like this:
 #+BEGIN_SRC clojure -n
   (defn my-recipient-event-handler (event context)
     (assoc context :my-recipients
-           {:address (extract-mail-address (event :address))
-            :mailer (get-macro context "rcpt_mailer")
-            :host (get-macro context "rcpt_host")}))
+           (cons {:address (extract-mail-address (event :address))
+                  :mailer (get-macro context "rcpt_mailer")
+                  :host (get-macro context "rcpt_host")}
+                 (context :my-recipients))))
 #+END_SRC
 
 
