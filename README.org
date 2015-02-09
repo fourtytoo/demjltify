@@ -1,0 +1,149 @@
+* DEMYJTIFY: a milter library in Clojure
+
+This is a Clojure library to implement milters.  A milter is a
+Sendmail filter (hence the contraction); a daemon program that extends
+and augments the Sendmail functionality and implements features that
+are not provided by Sendmail itself, such as spam filtering, virus
+protection, mail archiving, mailing lists etc.  Matter of fact, much
+of the logic behind Sendmail routing and access control could, in
+fact, be off loaded to a milter or a composition of milters.
+
+Milters are usually C programs linked to the libmilter library, which
+comes with Sendmail.  Interfacing to such library is not always an
+option, especially for many Lisp systems.
+
+The libmilter library implements the milter protocol, the
+(de)serialisation of the data and the multi-threading.  This is what
+demyjtify does as well, in a more lispy style.
+
+
+** How it works
+
+The program calls =start-milter= passing a port number and a function.
+The milter library binds a socket to that port and waits for Sendmail
+connections.
+
+For each connection, the milter library spawns a new thread and calls
+the callback function that was provided in the call to =start-milter=
+passing a context map.  The map, at this point in time, is populated
+by just one value, the socket.  The callback, in turn, must return a
+context map that usually contains further state data and milter
+options such as the event callbacks and various protocol options.
+
+Each event callback is itself a function that accepts an event map and
+a context map, and returns a context map (not necessarily the same).
+
+On each event received from Sendmail, the library calls the relevant
+handler (callback).  The handler can send back action request(s) to
+Sendmail.  (Some events don't require any answer/action, though.)
+
+
+** To install and compile
+
+Add the dependency to your lein project like this:
+
+#+BEGIN_SRC clojure -n
+  [fourtytoo/demyjtify "0.1.0-SNAPSHOT"]
+#+END_SRC
+
+or whatever version happens to be the one you picked.
+
+Add demyjtify.core to your namespace like this:
+
+#+BEGIN_SRC clojure -n
+  (ns my-program.core
+    (:require [fourtytoo.demjltify.core :as milter]))
+#+END_SRC
+
+
+** Usage
+
+To use this library, all you have to do is:
+
+  - specialise the event callbacks for all the events you care about
+  - call ~start-milter~
+
+The event callbacks must return a, possibly new, context object and
+optionally perform a milter action among those negotiated with
+Sendmail.
+
+This library is stateless, so the program, if needs to, is responsible
+to save its state in the context object that is returned by the event
+handlers.
+
+=start-milter= is a procedure that never exits under normal
+circumstances.  It enters a loop serving MTA connections on the
+specified socket.  The default behaviour is to call =on-connection=
+which is a user provided function that should call =server-loop= with
+a context object.  =on-connection= is called in a new thread. You
+don't need to use =start-milter=, if you want to write your own server
+function, go ahead, but for most practical purposes it does what you
+need to connect to Sendmail.
+
+*** Sendmail configuration
+
+To install a milter in Sendmail, in /etc/mail/sendmail.mc, you have to
+add a line like this:
+
+#+BEGIN_EXAMPLE
+  INPUT_MAIL_FILTER(`filter2', `S=inet:20025@localhost, F=T')
+#+END_EXAMPLE
+
+and compile the .mc into a .cf file:
+
+#+BEGIN_SRC sh -n
+  cd /etc/mail
+  make
+  make install restart
+#+END_SRC
+
+Then make sure you use the same address in the call of
+=start-milter=:
+
+#+BEGIN_SRC clojure -n
+  (start-milter 20025 my-connect-callback)
+#+END_SRC
+
+The ~F=T~ flag tells Sendmail to treat milter-related errors (ie milter
+not listening or crashing) as temporary.  Read the Sendmail's
+cf/README file if you need further details.
+
+
+** See also
+
+The following pages could be useful to understand what a milter is
+and what it does:
+
+ - http://www.sendmail.com/partner/resources/development/milter_api/
+ - https://www.milter.org/developers/api/index
+
+This work is derived from the Common Lisp library demyltify, which is
+available on GitHub at http://github.com/fourtytoo/demyltify
+
+
+** Gotchas
+
+This work is based on an informal description of the undocumented
+Sendmail-milter protocol.  This code may therefore be outdated right
+now, as the Sendmail folks don't want you to mess with their protocol.
+They rather want you to use their pthread-based libmilter library in
+C.  Although, in practice, it's unlikely that this code will be
+invalidated by the next few Sendmail versions, you never know.
+
+This code has been tested on Clojure 1.6.
+
+
+** Credits
+
+Credit should be given to Todd Vierling (tv@pobox.com, tv@duh.org)
+for documenting the MTA/milter protocol and writing the first
+implementation in Perl.
+
+
+
+** License
+
+Copyright © 2015 Walter C. Pelissero <walter@pelissero.de>
+
+Distributed under the GNU Lesser General Public License either version
+2 or (at your option) any later version.
