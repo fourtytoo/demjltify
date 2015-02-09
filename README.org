@@ -117,7 +117,7 @@ circumstances you shouldn't bother with them:
 The =define-event-handlers= helps you define the event handlers.  Example:
 
 #+BEGIN_SRC clojure -n
-  (define-event-handlers handlers
+  (define-event-handlers my-handlers
     (:body
      (print "+")
      (send-action {:action :continue} context)
@@ -162,7 +162,7 @@ milter options and stuff your milter might need.  Example:
                           (assoc :byte-count 0)
                           (assoc :some-other-internal-state [:foo :bar])
                           ;; defined above with define-event-handlers
-                          (assoc :handlers handlers))))))
+                          (assoc :handlers my-handlers))))))
 #+END_SRC
 
 *** Sendmail configuration
