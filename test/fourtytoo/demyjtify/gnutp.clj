@@ -29,4 +29,9 @@
    (default-event-handler event context)))
 
 (defn run-sample [& args]
-  (future (start-milter 12315 identity)))
+  (start-milter 12315
+                (fn [ctx]
+                  (println "got MTA connection" ctx)
+                  (-> ctx
+                      (assoc :handlers handlers)
+                      (assoc :actions #{:add-header})))))

@@ -114,7 +114,7 @@
                              ;; Make sure the action we are about to perform is allowed and
                              ;; expected by the MTA.  Some actions need to be agreed beforehand
                              ;; during the initial handshake.  See the :OPTIONS event.
-                             (assert (get-in ~'context [:actions (~'action ~type)])))
+                             (assert (get-in ~'context [:actions ~type])))
            ]
        ~@body)))
 
