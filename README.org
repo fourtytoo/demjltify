@@ -201,9 +201,6 @@ messages, but it can forgo adding new headers (to notify, for
 instance, that the envelope has been modified) if the MTA doesn't
 agree on it.
 
-If the milter tries and performs an action that was not negotiated, a
-protocol error will be signalled by the MTA.
-
 After the options negotiation phase the context is updated with the
 agreed actions/events.  The :events map entry will contain the set of
 events provided by the MTA, and the :actions will contain the set of
@@ -223,6 +220,8 @@ following list:
  - :quarantine  (equivalent to a "ask me another time")
  - :change-sender
 
+If the milter tries and performs an action that was not negotiated, a
+protocol error will be signalled by the MTA.
 
 *** Macros
 
