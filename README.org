@@ -196,15 +196,16 @@ For instance:
                     (assoc :optional-actions #{:add-header}))))
 #+END_SRC
 
-In example above the milter might need to add recipients to messages,
-but it can forgo adding new headers (to notify, for instance, that the
-envelope has been modified) if the MTA doesn't agree on it.
+In the example above the milter might need to add recipients to
+messages, but it can forgo adding new headers (to notify, for
+instance, that the envelope has been modified) if the MTA doesn't
+agree on it.
 
-If the milter tries and perform an action that was not negotiated, a
+If the milter tries and performs an action that was not negotiated, a
 protocol error will be signalled by the MTA.
 
 After the options negotiation phase the context is updated with the
-agreed actions/events.  The map entry :events will contain the set of
+agreed actions/events.  The :events map entry will contain the set of
 events provided by the MTA, and the :actions will contain the set of
 actions the milter is allowed to perform.
 
