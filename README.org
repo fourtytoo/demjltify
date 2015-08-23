@@ -83,7 +83,7 @@ specified socket.  You don't need to use =start-milter=, if you want
 to write your own server function, go ahead, but for most practical
 purposes it does what you need to connect to Sendmail.
 
-*** The callbacks
+*** The callbacks (event handlers)
 
 The callbacks are a keywords to functions map.  The keyword represents
 the milter event type (coming from Sendmail) and the function accepts
@@ -164,6 +164,64 @@ milter options and stuff your milter might need.  Example:
                           ;; defined above with define-event-handlers
                           (assoc :handlers my-handlers))))))
 #+END_SRC
+
+*** Options negotiations (events and actions)
+
+Part of the milter protocol is the negotiation of actions and events
+Sendmail should expect (former) or provide (latter).  A milter must
+declare them upfront before any actual mail processing is performed.
+Whereas the events are automatically deduced by demyjtify from
+the :handlers you provide, the actions are not.  You need to specify
+them in the context you return to demyjtify from the connection
+function.
+
+The events requested to Sendmail are those specified with
+the :handlers and those with the :optional-events keyword.  The latter
+should be a subset of the :handlers.  The actions requested to
+Sendmail are those specified with the :actions and :optional-actions
+keyword.
+
+The semantics of these sets should be self explanatory; the optional
+actions/events are those the milter would be able to cope without
+(possibly with a reduced functionality) without entirely failing its
+purpose.
+
+For instance:
+
+#+BEGIN_SRC clojure -n
+(start-milter port
+              (fn [ctx]
+                (-> ctx
+                    (assoc :actions #{:add-recipient})
+                    (assoc :optional-actions #{:add-header}))))
+#+END_SRC
+
+In example above the milter might need to add recipients to messages,
+but it can forgo adding new headers (to notify, for instance, that the
+envelope has been modified) if the MTA doesn't agree on it.
+
+If the milter tries and perform an action that was not negotiated, a
+protocol error will be signalled by the MTA.
+
+After the options negotiation phase the context is updated with the
+agreed actions/events.  The map entry :events will contain the set of
+events provided by the MTA, and the :actions will contain the set of
+actions the milter is allowed to perform.
+
+*** Actions
+
+During the protocol negotiation phase you need to fill the context map
+with a set of actions your milter means to use, selected from the
+following list:
+
+ - :add-header
+ - :change-body
+ - :add-recipient
+ - :delete-recipient
+ - :change-header
+ - :quarantine  (equivalent to a "ask me another time")
+ - :change-sender
+
 
 *** Macros
 
