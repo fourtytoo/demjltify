@@ -165,7 +165,7 @@ milter options and stuff your milter might need.  Example:
                           (assoc :handlers my-handlers))))))
 #+END_SRC
 
-*** Options negotiations (events and actions)
+*** Options negotiation (events and actions)
 
 Part of the milter protocol is the negotiation of actions and events
 Sendmail should expect (former) or provide (latter).  A milter must
