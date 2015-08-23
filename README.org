@@ -298,14 +298,8 @@ available on GitHub at http://github.com/fourtytoo/demyltify
 
 ** Gotchas
 
-This work is based on an informal description of the undocumented
-Sendmail-milter protocol.  This code may therefore be outdated right
-now, as the Sendmail folks don't want you to mess with their protocol.
-They rather want you to use their pthread-based libmilter library in
-C.  Although, in practice, it's unlikely that this code will be
-invalidated by the next few Sendmail versions, you never know.
-
-This code has been tested on Clojure 1.6.
+This work is based on demyltify which is in turn based on an informal
+description of the undocumented Sendmail-milter protocol.
 
 
 ** Credits
