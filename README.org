@@ -225,10 +225,10 @@ protocol error will be signalled by the MTA.
 
 *** Macros
 
-Sendmail before some events passes some additional data to the milter.
-This data is in form of values associated to a symbolic name (macro)
-such as =mail_host=, =_= (the connection host), =rcpt_mailer=,
-=rcpt_host=, etc.  A map, at the end of the day.
+Before certain events, Sendmail passes some additional data to the
+milter.  This data is in the form of values associated to a symbolic
+name (macro) such as =mail_host=, =_= (the connection host),
+=rcpt_mailer=, =rcpt_host=, etc.  A map, at the end of the day.
 
 A milter may access these values with the =get-macro= function,
 passing the current context and the macro name as a string.  Example:
