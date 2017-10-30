@@ -1,9 +1,10 @@
-(ns fourtytoo.demyjtify.core
-  (:require [clojure.tools.logging :as log])
-  (:use [fourtytoo.bnb4clj]
-        [fourtytoo.demyjtify.util]
-        [fourtytoo.demyjtify.events]
-        [fourtytoo.demyjtify.actions]))
+(ns demyjtify.core
+  (:require [onelog.core :as log]
+            [clojure.stacktrace :refer [print-stack-trace]]
+            [bnb4clj.core :refer :all]
+            [demyjtify.util :refer :all]
+            [demyjtify.events :refer :all]
+            [demyjtify.actions :refer :all]))
 
 (defmacro define-event-handlers [name & handlers]
   `(def ~name
@@ -36,7 +37,7 @@
       (catch clojure.lang.ExceptionInfo e
         (let [ex ((ex-data e) :exception)]
           (log/error e "Exiting ABNORMALLY server loop" ex)
-          (clojure.stacktrace/print-stack-trace ex 10))
+          (print-stack-trace ex 10))
         (handle-event {:event :disconnect} ((ex-data e) :context)))
       (catch Exception e
         (log/error e "Exiting ABNORMALLY server loop" e)

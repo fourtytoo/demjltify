@@ -1,7 +1,7 @@
-(ns fourtytoo.demyjtify.actions
-  (:require [clojure.java.io :as io])
-  (:use [fourtytoo.bnb4clj]
-        [fourtytoo.demyjtify.util]))
+(ns demyjtify.actions
+  (:require [clojure.java.io :as io]
+            [bnb4clj.core :refer :all]
+            [demyjtify.util :refer :all]))
 
 (def action-masks
   "Map of action bitmasks lifted from <libmilter/mfapi.h>."

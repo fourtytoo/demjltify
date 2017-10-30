@@ -1,7 +1,7 @@
-(ns fourtytoo.demyjtify.parser
-  (:require [clojure.string :as str])
-  (:use [fourtytoo.bnb4clj]
-        [fourtytoo.demyjtify.util]))
+(ns demyjtify.parser
+  (:require [clojure.string :as str]
+            [bnb4clj.core :refer :all]
+            [demyjtify.util :refer :all]))
 
 (defn decode-int [bytes]
   (reduce (fn [val byte] (bit-or (bit-shift-left val 8) byte)) 0 bytes))

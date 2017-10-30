@@ -1,9 +1,9 @@
-(ns fourtytoo.demyjtify.snoop
-  (:require [clojure.tools.logging :as log])
-  (:use [fourtytoo.bnb4clj]
-        [fourtytoo.demyjtify.util]
-        [fourtytoo.demyjtify.events]
-        [fourtytoo.demyjtify.actions])
+(ns demyjtify.snooper
+  (:require [onelog.core :as log]
+            [bnb4clj.core :refer :all]
+            [demyjtify.util :refer :all]
+            [demyjtify.events :refer :all]
+            [demyjtify.actions :refer :all])
   (:import
    [java.net InetSocketAddress]
    [java.nio ByteBuffer CharBuffer]

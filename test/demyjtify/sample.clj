@@ -3,8 +3,7 @@
             [clj-time.core :as time]
             [clj-time.coerce :as tc]
             [clojure.tools.trace :as trace]
-            [clojure.tools.logging :as log]
-            [clj-logging-config.log4j :as logconf])
+            [onelog.core :as log])
   (:use [fourtytoo.demyjtify.core]
         [fourtytoo.demyjtify.actions :refer (send-action)]
         [fourtytoo.demyjtify.events :refer (default-event-handler)]))
@@ -55,7 +54,7 @@
   (trace/untrace-var* 'log-formatter))
 
 (defn setup-logging []
-  (logconf/set-logger! :name "console"
+  #_(logconf/set-logger! :name "console"
                        :level :debug
                        :append true
                        :out log-formatter))

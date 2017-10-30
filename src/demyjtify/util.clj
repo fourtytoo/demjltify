@@ -1,6 +1,7 @@
-(ns fourtytoo.demyjtify.util
-  (:require [clojure.java.io :as io])
-  (:use [fourtytoo.bnb4clj]))
+(ns demyjtify.util
+  (:require [clojure.java.io :as io]
+            [onelog.core :as log]
+            [bnb4clj.core :refer :all]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -22,9 +23,7 @@
   `(throw (ex-info "Protocol error" (hash-map :type '~type ~@args))))
 
 (defmacro dprint [& args]
-  ;; Why don't the message appear as they should? -wcp25/1/15.
-  #_`(log/debug ~@args)
-  `(println ~@args))
+  `(log/debug+ ~@args))
 
 (defn socket-reader [socket]
   #_(io/reader socket)

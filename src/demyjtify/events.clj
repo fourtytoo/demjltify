@@ -1,10 +1,9 @@
-(ns fourtytoo.demyjtify.events
-  (:require [clojure.java.io :as io])
-  (:use [fourtytoo.bnb4clj]
-        [fourtytoo.demyjtify.util]
-        [fourtytoo.demyjtify.parser]
-        [fourtytoo.demyjtify.actions
-         :only (send-action actions-mask actions-from-mask)]))
+(ns demyjtify.events
+  (:require [clojure.java.io :as io]
+            [bnb4clj.core :refer :all]
+            [demyjtify.util :refer :all]
+            [demyjtify.parser :refer :all]
+            [demyjtify.actions :refer [send-action actions-mask actions-from-mask]]))
 
 
 (defn receive-byte [input]
