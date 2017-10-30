@@ -33,12 +33,12 @@ the event callbacks and various protocol options.
 Each event callback is itself a function that accepts an event map and
 a context map, and returns a context map (not necessarily the same).
 
-On each event received from Sendmail, the library calls the relevant
+On each event, received from Sendmail, the library calls the relevant
 handler (callback).  The handler can send back action request(s) to
-Sendmail.  (Some events don't require any answer/action, though.)
+Sendmail.  Some events don't require any answer/action, though.
 
 
-** To install and compile
+** Installation
 
 Add the dependency to your lein project like this:
 
@@ -48,6 +48,35 @@ Add the dependency to your lein project like this:
 
 or whatever version happens to be the one you picked.
 
+If demyjtify project is _not_ listed on Clojars you'll have to
+download it and install it yourself.  Here is how.
+
+Clone the library from GitHub:
+#+BEGIN_SRC sh -n
+cd somewhere/outside/your/project
+git clone git@github.com:fourtytoo/demyjtify.git
+#+END_SRC
+
+Add the dependency to your project.  Check how to do it on the
+leiningen [page](https://github.com/technomancy/leiningen/blob/stable/doc/TUTORIAL.md#checkout-dependencies). 
+But that basically boils down to creating a checkouts directory in the
+root of your project
+
+#+BEGIN_SRC sh -n
+cd your/project/root/directory
+mkdir checkouts
+#+END_SRC
+
+and inside it, creating a symbolic link to demyjtify's root directory
+#+BEGIN_SRC sh -n
+cd checkouts
+ln -s somewhere/outside/your/project/demyjtify .
+#+END_SRC
+
+
+
+** Usage
+
 Add demyjtify.core to your namespace like this:
 
 #+BEGIN_SRC clojure -n
@@ -55,27 +84,22 @@ Add demyjtify.core to your namespace like this:
     (:require [fourtytoo.demyjtify.core :as milter]))
 #+END_SRC
 
-
-** Usage
-
 To use this library, all you have to do is:
 
   - specialise the event callbacks for all the events you care about
   - call =start-milter=
 
-The event callbacks must return a, possibly new, context object and
-optionally perform a milter action among those negotiated with
-Sendmail.
+The event callbacks must return a new context object and, possibly,
+perform a milter action among those negotiated with Sendmail.
 
-This library is stateless, so the program, if needs to, is responsible
-to save its state in the context map that is passed to and returned
-by the event handlers.
+This library is stateless, so the program is responsible to save its
+state in the context map that is passed to and returned by the event
+handlers.
 
-Conceptually the lifetime of a context map is the same as the Sendmail
-connection.  The user program has to make sure that it resets whatever
-state, in the context, that is message-specific, at every message
-boundary.  Usually good places are the =mail= or the
-=end-of-message=/=abort= handlers.
+In principle the lifetime of a context is the same as the connection
+to Sendmail.  The user program has to make sure to reset whatever
+state that is message-specific.  Usually good places are the =mail= or
+the =end-of-message=/=abort= handlers.
 
 =start-milter= is a procedure that never exits under normal
 circumstances.  It enters a loop serving MTA connections on the
@@ -85,29 +109,30 @@ purposes it does what you need to connect to Sendmail.
 
 *** The callbacks
 
-The callbacks are a keywords to functions map.  The keyword represents
-the milter event type (coming from Sendmail) and the function accepts
-to arguments; the event and the context.
+The callbacks are kept in a map.  The key represents the milter event
+type (coming from Sendmail) and the function should accept two
+arguments; the event and the context.
 
 The events a milter can handle are:
 
- - =:abort= when Sendmail aborts the current message (others may follow)
- - =:body= a chunk of the message body (passed the headers)
- - =:connect= when a client MTA connects to our Sendmail
+ - =:abort= when Sendmail aborts the current message (other messages may follow)
+ - =:body= a chunk of the message body (after the headers)
+ - =:connect= when a client MTA establishes a connection to our Sendmail daemon
  - =:data= marks the beginning of the message body
- - =:disconnect= Sendmail wishes to disconnect but it will connect
+ - =:disconnect= Sendmail wishes to disconnect but it may connect
    again later
  - =:end-of-headers= to signal the end of the email's headers part
  - =:end-of-message= at the end of a message body
  - =:header= for each email header
- - =:hello= when Sendmail sees a HELO from its client
+ - =:hello= when Sendmail gets a HELO from a connected client
  - =:mail= when Sendmail receives a MAIL command from its client
  - =:quit= when Sendmail asks the milter to lay down and die
  - =:recipient= for each recipient on the email envelope
  - =:unkown= invalid SMTP command from Sendmail's client
 
-Internally the milter library handles the following events.  In normal
-circumstances you shouldn't bother with them:
+Beyond those above, this milter library handles internally the
+following events.  In normal circumstances you shouldn't bother with
+them:
 
  - =:define-macro= definition of symbolic values that supplement
    other events
@@ -117,26 +142,25 @@ circumstances you shouldn't bother with them:
 The =define-event-handlers= helps you define the event handlers.  Example:
 
 #+BEGIN_SRC clojure -n
+  (def byte-counter (atom 0))
+  (def message-counter (atom 0))
+
   (define-event-handlers my-handlers
     (:body
-     (print "+")
      (send-action {:action :continue} context)
      (update-in context [:byte-count]
                 #(+ % (count (event :data)))))
     (:mail
-     (print "MAIL ")
      (send-action {:action :continue} context)
      (assoc context :byte-count 0))
     (:abort
-     (println " *ABORT*")
      (->> (assoc context :byte-count 0)
           (default-event-handler event)))
     (:end-of-message
-     (println " EOM")
      (swap! byte-counter
             #(+ % (context :byte-count)))
      (swap! message-counter inc)
-     (print-totals context)
+     (println byte-counter message-counter)
      (default-event-handler event context)))
 #+END_SRC
 
@@ -152,25 +176,23 @@ milter options and stuff your milter might need.  Example:
 
 #+BEGIN_SRC clojure -n
   (defn my-program [port]
-    ;; [...]
     (println "Starting server on port" port)
     (future
       (start-milter port
                     (fn [ctx]
                       (println "got MTA connection" ctx)
-                      (-> ctx
-                          (assoc :byte-count 0)
-                          (assoc :some-other-internal-state [:foo :bar])
+                      (assoc ctx :byte-count 0
+                           :some-other-internal-state {:foo 1 :bar 2}
                           ;; defined above with define-event-handlers
-                          (assoc :handlers my-handlers))))))
+                           :handlers my-handlers)))))
 #+END_SRC
 
 *** Macros
 
 Sendmail before some events passes some additional data to the milter.
-This data is in form of values associated to a symbolic name (macro)
-such as =mail_host=, =_= (the connection host), =rcpt_mailer=,
-=rcpt_host=, etc.  A map, at the end of the day.
+This data is in form of key-value pairs.  Sendmail calls them macros.
+For example =mail_host=, =_= (the connection host), =rcpt_mailer=,
+=rcpt_host=, etc.
 
 A milter may access these values with the =get-macro= function,
 passing the current context and the macro name as a string.  Example:
@@ -180,7 +202,7 @@ passing the current context and the macro name as a string.  Example:
     (println "Got connection from" host))
 #+END_SRC
 
-In an =:recipient= handler it might be used like this:
+In a =:recipient= handler it may be used like this:
 
 #+BEGIN_SRC clojure -n
   (defn my-recipient-event-handler (event context)
