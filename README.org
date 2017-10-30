@@ -107,7 +107,7 @@ specified socket.  You don't need to use =start-milter=, if you want
 to write your own server function, go ahead, but for most practical
 purposes it does what you need to connect to Sendmail.
 
-*** The callbacks
+*** The callbacks (event handlers)
 
 The callbacks are kept in a map.  The key represents the milter event
 type (coming from Sendmail) and the function should accept two
@@ -187,9 +187,67 @@ milter options and stuff your milter might need.  Example:
                            :handlers my-handlers)))))
 #+END_SRC
 
+*** Options negotiation (events and actions)
+
+Part of the milter protocol is the negotiation of actions and events
+Sendmail should expect (former) or provide (latter).  A milter must
+declare them upfront before any actual mail processing is performed.
+Whereas the events are automatically deduced by demyjtify from
+the :handlers you provide, the actions are not.  You need to specify
+them in the context you return to demyjtify from the connection
+function.
+
+The events requested to Sendmail are those specified with
+the :handlers and those with the :optional-events keyword.  The latter
+should be a subset of the :handlers.  The actions requested to
+Sendmail are those specified with the :actions and :optional-actions
+keyword.
+
+The semantics of these sets should be self explanatory; the optional
+actions/events are those the milter would be able to cope without
+(possibly with a reduced functionality) without entirely failing its
+purpose.
+
+For instance:
+
+#+BEGIN_SRC clojure -n
+(start-milter port
+              (fn [ctx]
+                (-> ctx
+                    (assoc :actions #{:add-recipient})
+                    (assoc :optional-actions #{:add-header}))))
+#+END_SRC
+
+In the example above the milter might need to add recipients to
+messages, but it can forgo adding new headers (to notify, for
+instance, that the envelope has been modified) if the MTA doesn't
+agree on it.
+
+After the options negotiation phase the context is updated with the
+agreed actions/events.  The :events map entry will contain the set of
+events provided by the MTA, and the :actions will contain the set of
+actions the milter is allowed to perform.
+
+*** Actions
+
+During the protocol negotiation phase you need to fill the context map
+with a set of actions your milter means to use, selected from the
+following list:
+
+ - :add-header
+ - :change-body
+ - :add-recipient
+ - :delete-recipient
+ - :change-header
+ - :quarantine  (equivalent to a "ask me another time")
+ - :change-sender
+
+If the milter tries and performs an action that was not negotiated, a
+protocol error will be signalled by the MTA.
+
 *** Macros
 
-Sendmail before some events passes some additional data to the milter.
+Before certain events Sendmail passes additional data to the milter.
 This data is in form of key-value pairs.  Sendmail calls them macros.
 For example =mail_host=, =_= (the connection host), =rcpt_mailer=,
 =rcpt_host=, etc.
@@ -262,14 +320,8 @@ available on GitHub at http://github.com/fourtytoo/demyltify
 
 ** Gotchas
 
-This work is based on an informal description of the undocumented
-Sendmail-milter protocol.  This code may therefore be outdated right
-now, as the Sendmail folks don't want you to mess with their protocol.
-They rather want you to use their pthread-based libmilter library in
-C.  Although, in practice, it's unlikely that this code will be
-invalidated by the next few Sendmail versions, you never know.
-
-This code has been tested on Clojure 1.6.
+This work is based on demyltify which is in turn based on an informal
+description of the undocumented Sendmail-milter protocol.
 
 
 ** Credits
