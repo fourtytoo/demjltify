@@ -51,11 +51,18 @@ or whatever version happens to be the one you picked.
 If demyjtify project is _not_ listed on Clojars you'll have to
 download it and install it yourself.  Here is how.
 
-Clone the library from GitHub:
+Clone the library from GitHub
 #+BEGIN_SRC sh -n
 cd somewhere/outside/your/project
 git clone git@github.com:fourtytoo/demyjtify.git
 #+END_SRC
+
+and install it
+#+BEGIN_SRC sh -n
+cd demyjtify
+lein install
+#+END_SRC
+
 
 Add the dependency to your project.  Check how to do it on the
 leiningen [page](https://github.com/technomancy/leiningen/blob/stable/doc/TUTORIAL.md#checkout-dependencies). 
